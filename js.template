@@ -116,33 +116,3 @@ function decodeDownlink(input) {
     }
     return output;
 }
-
-//===========================================================
-/*
-const uplinkParams = {
-    bytes: [1, 2, 3],
-    fport: 10,
-    recvTime: Date.now()
-};
-console.log(decodeUplink(uplinkParams));
-
-const uplinkParams1 = {
-    bytes: [1, 2, 3, 4],
-    fport: 11,
-    recvTime: Date.now()
-};
-console.log(decodeUplink(uplinkParams1));
-
-
-const downParam={
-    fport: 10,
-    fields: { field1: 123, field2: 345 }
-};
-console.log( encodeDownlink(downParam));
-
-flist=["field1", "f3"]
-obj={field1: 1, f2: 3}
-elist=[]
-V(flist, obj, elist);
-console.log( elist);
-*/

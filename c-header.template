@@ -1,0 +1,8 @@
+#ifndef _AUTOGEN_LORABUF_HEADER_FILE
+#define _AUTOGEN_LORABUF_HEADER_FILE
+{% for msg in all_messages %}
+typedef struct __attribute__((__packed__)) { {% for field in msg.fields%}
+    uint64_t {{field.name}}:{{field.size}};{% endfor %}
+} {{msg.msg_type}}_{{msg.name}}_t;
+{% endfor %}
+#endif
