@@ -1,5 +1,5 @@
-//Generated Message Types {% for msg in messages %}
-// Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}
+//Generated Message Types {% for msg in all_messages %}
+// Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
 //    Fields:
 //        {% for field in msg.fields %}{{ field.name }} ({{ field.size }} bits)
 //        {% endfor %}
@@ -37,7 +37,6 @@ function W(buffer, warnings, start, end, value) {
     }
 }
 
-static TEMPLATE : &'static str = "Hello {name}!";
 function decodeUplink(input) {
     console.log("decodeUplink", input);
 
@@ -46,12 +45,11 @@ function decodeUplink(input) {
     let b=input.bytes;
     let l=input.bytes.length;
     let p=input.fport;
-    if (p==10 && l==3) {
-        o={ field1: R(b,0,8), field2: R(b,8,16), field2: R(b,16,24)};
-    }
-    else if (p==11 && l==4) {
-        o={ field1: R(b,0,16), field2: R(b,16,32)};
-    }
+    if (false){} {% for msg in uplinks %}
+    else if (p=={{msg.fport}} && l=={{msg.length}}) {
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
+    }{% endfor %}
     else {
         e=["bad port or length"]
     }
@@ -73,16 +71,13 @@ function encodeDownlink(input) {
     let b=[];
     let i=[];
     let e=[];
-    if (p==10) {
-        l=["field1", "field2"]
+    if (false) {} {% for msg in downlinks %}
+    else if (p=={{msg.fport}}) {
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        l=[{% for field in msg.fields%}"{{field.name}}", {% endfor %}]
         V(l, f, e);
-        W(b, i, 0, 8, f.field1); W(b, i, 8, 16, f.field2);
-    }
-    else if (p==11 ) {
-        l=["field3", "field4"]
-        V(l, f, e);
-        W(b, i, 0, 3, f.field3); W(b, i, 4, 16, f.field4);
-    }
+        {% for field in msg.fields%}W(b, i, {{field.start_index}}, {{field.end_index}}, f.{{field.name}}); {% endfor %}
+    }{% endfor %}
     else {
         e=["bad port"]
     }
@@ -105,12 +100,11 @@ function decodeDownlink(input) {
     let b=input.bytes;
     let l=input.bytes.length;
     let p=input.fport;
-    if (p==10 && l==3) {
-        o={ field1: R(b,0,8), field2: R(b,8,16), field2: R(b,16,24)};
-    }
-    else if (p==11 && l==4) {
-        o={ field1: R(b,0,16), field2: R(b,16,32)};
-    }
+    if (false){} {% for msg in downlinks %}
+    else if (p=={{msg.fport}} && l=={{msg.length}}) {
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
+    }{% endfor %}
     else {
         e=["bad port or length"]
     }
@@ -124,7 +118,7 @@ function decodeDownlink(input) {
 }
 
 //===========================================================
-
+/*
 const uplinkParams = {
     bytes: [1, 2, 3],
     fport: 10,
@@ -151,5 +145,4 @@ obj={field1: 1, f2: 3}
 elist=[]
 V(flist, obj, elist);
 console.log( elist);
-
-
+*/

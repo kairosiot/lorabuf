@@ -1,0 +1,29 @@
+[uplink 10 UplinkMessageName]
+u1 some_one_bit_field
+u2 some_two_bit_field
+u8 some_eight_bit_field
+u1 field
+u2 names
+u3 go
+u1 after
+u1 type_and_size
+
+[uplink 11 SecondUplinkName]
+u15 test
+
+[uplink 12 ThirdUplinkName]
+u16 test
+
+[uplink 13 FourthUplinkName]
+u17 test
+
+[downlink 10 DownlinkMessageName]
+u1 some
+u1 field
+u2 name
+u3 goes
+u1 here
+
+[downlink 11 AnotherDownlink]
+u12 twelveBit
+u13 value

@@ -1,0 +1,13 @@
+This program is intended to generate bit packed encoders and decoders in C and Javascript.
+
+It takes sets of message definitions (messages.lora) and a template (js.template) and produces an output (output.js)
+
+This is a rust project. To build, first install the toolchain from https://rustup.rs/
+Then optionally run `cargo build`
+Then optionally run `cargo run messages.lora js.template output.js` to run the example
+
+The examples are
+ - messages.lora/js.template/output.js
+ - large.lora/js.template/output-large-trimmed.js
+
+The "large" example contains 10 uplinks and 10 downlinks each with 32 fields. Good luck writing that by hand in a bug-free manner with one person in less than a day!
