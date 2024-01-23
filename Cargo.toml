@@ -6,9 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-configparser = { version = "3.0.2", features = ["indexmap"] }
-indexmap = "1.9.3"
-serde_derive = "1.0.162"
-serde = "1.0.162"
-liquid = "0.26.1"
-regex = "1.8.1"
+configparser = { version = "3.0.4", features = ["indexmap"] }
+indexmap = "2.1.0"
+serde = { version = "1.0.165", features = ["derive"] }
+liquid = "0.26.4"
+regex = "1.9.6"
+parse_int = "0.6.0"

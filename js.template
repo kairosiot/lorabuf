@@ -1,18 +1,19 @@
 //Generated Message Types {% for msg in all_messages %}
 // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
 //    Fields:
-//        {% for field in msg.fields %}{{ field.name }} ({{ field.size }} bits)
+//        {% for field in msg.fields %}{{ field.name }} ({{ field.size }} bits{% if field.value_override %}, value={{ field.value_override }}{% endif %})
 //        {% endfor %}
 //{% endfor %}
 
+//verify fields were supplied
 const V = (field_list, user_data, error_list) => {
     const keys = Object.keys(user_data);
     field_list
         .filter((f) => !keys.includes(f))
-        .forEach((x) => error_list.push(`required field ${x} was not supplied`));
+        .forEach((x) => error_list.push(`required field '${x}' was not supplied`));
     keys
         .filter((f) => !field_list.includes(f))
-        .forEach((x) => error_list.push(`extra field ${x} was supplied but not used`));
+        .forEach((x) => error_list.push(`extra field '${x}' was supplied but not used`));
 }
 
 //read bits
@@ -20,28 +21,28 @@ function R(buffer, start, end) {
     let value=0;
     for(let i=start; i<end; i++) {
         value+=(((buffer[i>>3]>>(i%8))&1)<<(i-start));
-        //console.log("read", i>>3, i%8, start, value);
+        //console.log("read byte", i>>3, "mod8", i%8, "start", start, "value", value);
     }
     return value;
 }
 
 //write bits
 function W(buffer, warnings, start, end, value) {
-    if (value<0 || value>(2**(end-start-1)))
-        warnings.push("value at bit "+start+" out of bounds")
+    if (value<0 || value>(2**(end-start)))
+        warnings.push("value at bit "+start+" out of bounds. value="+value)
 
     for(let i=start; i<end; i++) {
         let bit=((value>>(i-start))&1)<<(i%8);
         buffer[i>>3]|=bit;
-        console.log("write", i, i>>3, i%8, bit);
+        //console.log("write bit", i, "byte", i>>3, "mod8", i%8, "value", bit);
     }
 }
 
 function decodeUplink(input) {
-    console.log("decodeUplink", input);
+    //console.log("decodeUplink", input);
 
-    let o=null;
-    let e=[];
+    let o=null; //output field array
+    let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
     let p=input.fport;
@@ -63,20 +64,23 @@ function decodeUplink(input) {
 }
 
 function encodeDownlink(input) {
-    console.log("encodeDownlink", input);
+    //console.log("encodeDownlink", input);
     let p=input.fport;
     let f=input.fields;
 
     //no error checking, missing fields will cause crash
-    let b=[];
-    let i=[];
-    let e=[];
+    let b=null; //output byte array
+    let w=[]; //warnings
+    let e=[]; //errors
     if (false) {} {% for msg in downlinks %}
     else if (p=={{msg.fport}}) {
         // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
-        l=[{% for field in msg.fields%}"{{field.name}}", {% endfor %}]
+        l=[{% for field in msg.fields%}{% unless field.value_override %}"{{field.name}}", {% endunless %}{% endfor %}]
         V(l, f, e);
-        {% for field in msg.fields%}W(b, i, {{field.start_index}}, {{field.end_index}}, f.{{field.name}}); {% endfor %}
+        if (e.length==0) {
+        b=[]
+        {% for field in msg.fields%}W(b, w, {{field.start_index}}, {{field.end_index}}, {% unless field.value_override %}f.{{field.name}}{% else %}{{field.value_override}}{% endunless %}); {% endfor %}
+        }
     }{% endfor %}
     else {
         e=["bad port"]
@@ -86,17 +90,17 @@ function encodeDownlink(input) {
         fPort: p,
         bytes: b,
         errors: e,
-        warnings: i
+        warnings: w
     };
 
     return output;
 }
 
 function decodeDownlink(input) {
-    console.log("decodeDownlink", input);
+    //console.log("decodeDownlink", input);
 
-    let o=null;
-    let e=[];
+    let o=null; //output field array
+    let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
     let p=input.fport;

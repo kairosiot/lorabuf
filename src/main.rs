@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate serde_derive;
-
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -8,6 +5,7 @@ use configparser::ini::Ini;
 use indexmap::IndexMap;
 use regex::{Regex};
 use crate::MsgType::{Downlink, Uplink};
+use serde::Serialize;
 
 #[derive(Debug)]
 struct Config {
@@ -18,7 +16,7 @@ struct Config {
 
 fn load_config() -> Result<Config, String> {
     let args : Vec<String> =env::args().collect();
-    println!("{:?}", args);
+    //println!("{:?}", args);
     if args.len()!=4 {
         return Err("Please provide three arguments message-def-filename, template-filename and output-filename".to_string());
     }
@@ -47,6 +45,7 @@ struct Field {
     size : u8,
     start_index : u16,
     end_index : u16,
+    value_override : Option<u32>
 }
 
 #[derive(Debug,Serialize,Clone)]
@@ -58,28 +57,43 @@ struct Message {
     length : u8
 }
 
-fn parseFieldName(name : String) -> (String, String, u8) {
-    let re : Regex = Regex::new("([a-z]+)([0-9]+) (.+)").unwrap();
+fn parse_field_name(name : String) -> (String, String, u8) {
+    let re : Regex = Regex::new("([a-z]+)(\\[?[0-9]+]?) (.+)").unwrap();
     let fields = re.captures(name.as_str()).unwrap();
     let typename=fields.get(1).unwrap().as_str().to_string();
-    let typesize : u8 =fields.get(2).unwrap().as_str().parse().unwrap();
+    let mut typesize =fields.get(2).unwrap().as_str().to_string();
     let name=fields.get(3).unwrap().as_str().to_string();
 
-    assert_eq!(typename, "u");
+    assert!(typename=="u");
+    assert!(typesize.len()>0);
 
-    (name, typename, typesize)
+    let mut size_multiplier: u8 = 1;
+    if typesize.get(..1)==Some("[") {
+        size_multiplier =8;
+        typesize = typesize.replace("[", "").replace("]", "");
+    }
+
+    let size : u8 = size_multiplier * typesize.parse::<u8>().unwrap();
+
+
+    (name, typename, size)
 }
 
-fn constructFields(section_map : IndexMap<String, Option<String>>) -> Vec<Field>{
+fn construct_fields(section_map : IndexMap<String, Option<String>>) -> Vec<Field>{
     let mut fields = vec![];
     for (name, value) in section_map {
-        let (name, typename, size)=parseFieldName(name);
-        fields.push(Field { name, size, typename, start_index: 0, end_index: 0 });
+        let mut value_num : Option<u32> = None;
+        if let Some(x)=value {
+            value_num=Some(parse_int::parse(&x).unwrap());
+        }
+
+        let (name, typename, size)=parse_field_name(name);
+        fields.push(Field { name, size, typename, start_index: 0, end_index: 0, value_override: value_num });
     }
     return fields;
 }
 
-fn parseMessageSectionName(name : String) -> (MsgType, u8, String) {
+fn parse_message_section_name(name : String) -> (MsgType, u8, String) {
     let re : Regex = Regex::new("(.*) (.*) (.*)").unwrap();
 
     let fields = re.captures(name.as_str()).unwrap();
@@ -99,10 +113,9 @@ fn parseMessageSectionName(name : String) -> (MsgType, u8, String) {
     (msg_type, fport, name)
 }
 
-fn constructMsg(section_name : String, section_map : IndexMap<String, Option<String>>) -> Message {
-    let (msg_type, fport, name) = parseMessageSectionName(section_name);
-
-    let mut fields = constructFields(section_map);
+fn construct_message(section_name : String, section_map : IndexMap<String, Option<String>>) -> Message {
+    let (msg_type, fport, name) = parse_message_section_name(section_name);
+    let mut fields = construct_fields(section_map);
     let mut length = 0;
     for f in fields.as_mut_slice() {
         f.start_index=length;
@@ -127,7 +140,7 @@ fn load_protocol(config: &Config) -> TemplateParameters {
 
     let mut messages= vec![];
     for (section_name, section_map) in message_defs {
-        messages.push(constructMsg(section_name,section_map));
+        messages.push(construct_message(section_name,section_map));
     }
 
     let all_messages = messages.clone();
