@@ -45,10 +45,10 @@ function decodeUplink(input) {
     let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
-    let p=input.fport;
+    let p=input.fPort;
     if (false){} {% for msg in uplinks %}
     else if (p=={{msg.fport}} && l=={{msg.length}}) {
-        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
         o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
     }{% endfor %}
     else {
@@ -65,7 +65,7 @@ function decodeUplink(input) {
 
 function encodeDownlink(input) {
     //console.log("encodeDownlink", input);
-    let p=input.fport;
+    let p=input.fPort;
     let f=input.fields;
 
     //no error checking, missing fields will cause crash
@@ -74,12 +74,12 @@ function encodeDownlink(input) {
     let e=[]; //errors
     if (false) {} {% for msg in downlinks %}
     else if (p=={{msg.fport}}) {
-        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
         l=[{% for field in msg.fields%}{% unless field.value_override %}"{{field.name}}", {% endunless %}{% endfor %}]
         V(l, f, e);
         if (e.length==0) {
-        b=[]
-        {% for field in msg.fields%}W(b, w, {{field.start_index}}, {{field.end_index}}, {% unless field.value_override %}f.{{field.name}}{% else %}{{field.value_override}}{% endunless %}); {% endfor %}
+            b=[]
+            {% for field in msg.fields%}W(b, w, {{field.start_index}}, {{field.end_index}}, {% unless field.value_override %}f.{{field.name}}{% else %}{{field.value_override}}{% endunless %}); {% endfor %}
         }
     }{% endfor %}
     else {
@@ -103,10 +103,10 @@ function decodeDownlink(input) {
     let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
-    let p=input.fport;
+    let p=input.fPort;
     if (false){} {% for msg in downlinks %}
     else if (p=={{msg.fport}} && l=={{msg.length}}) {
-        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{ msg.fport }}, length {{ msg.length }} bytes
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
         o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
     }{% endfor %}
     else {

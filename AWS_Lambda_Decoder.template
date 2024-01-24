@@ -1,0 +1,68 @@
+/*
+	To be called by a rule that supplies the payload as {"fPort":123, bytes: }
+	A typical usage might look like:
+	SELECT WirelessDeviceId, WirelessMetadata.LoRaWAN.FPort as FPort, WirelessMetadata.LoRaWAN.DevEui as DevEui, PayloadData, timestamp() as timestamp, aws_lambda("arn:aws:lambda:us-east-1:739811603219:function:jason_test_function", { "fPort": WirelessMetadata.LoRaWAN.FPort, "bytes" : PayloadData }) as parsed_payload
+*/
+
+export const handler = async (event) => {
+	let bytes = Buffer.from(event.bytes, "base64");
+	let response = {"statusCode":200, "decodedUplink" : decodeUplink({"fPort": event.fPort, "bytes" : bytes}) };
+	console.log(event);
+	console.log(bytes);
+	console.log(response);
+	console.log(response.decodedUplink.data);
+	return response;
+};
+
+//Generated Message Types {% for msg in uplinks %}
+// Message: {{ msg.msg_type }}, {{ msg.name }}, port: {%if msg.fport%}{{msg.fport}}{%else%}not port checked{%endif%}, length: {%if msg.length%}{{msg.length}} bytes{%else%}not length checked{%endif%}
+//    Fields:
+//        {% for field in msg.fields %}{{ field.name }} ({{ field.size }} bits{% if field.value_override %}, value={{ field.value_override }}{% endif %})
+//        {% endfor %}
+//{% endfor %}
+
+//verify fields were supplied
+const V = (field_list, user_data, error_list) => {
+    const keys = Object.keys(user_data);
+    field_list
+        .filter((f) => !keys.includes(f))
+        .forEach((x) => error_list.push(`required field '${x}' was not supplied`));
+    keys
+        .filter((f) => !field_list.includes(f))
+        .forEach((x) => error_list.push(`extra field '${x}' was supplied but not used`));
+}
+
+//read bits
+function R(buffer, start, end) {
+    let value=0;
+    for(let i=start; i<end; i++) {
+        value+=(((buffer[i>>3]>>(i%8))&1)<<(i-start));
+        //console.log("read byte", i>>3, "mod8", i%8, "start", start, "value", value);
+    }
+    return value;
+}
+
+function decodeUplink(input) {
+    //console.log("decodeUplink", input);
+
+    let o=null; //output field array
+    let e=[]; //errors
+    let b=input.bytes;
+    let l=input.bytes.length;
+    let p=input.fPort;
+    if (false){} {% for msg in uplinks %}
+    else if ({%if msg.fport%}p=={{msg.fport}}{%endif%}{%if msg.fport%}{%if msg.length%} && {%endif%}{%endif%}{%if msg.length%}l=={{msg.length}}{%endif%}) {
+        // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
+        o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
+    }{% endfor %}
+    else {
+        e=["bad port or length"]
+    }
+
+    let output = {
+        data: o,
+        errors: e,
+        warnings: []
+    }
+    return output;
+}

@@ -53,12 +53,13 @@ struct Message {
     name : String,
     fields : Vec<Field>,
     msg_type : MsgType,
-    fport : u8,
-    length : u8
+    fport : Option<u8>,
+    length : Option<u16>
 }
 
 fn parse_field_name(name : String) -> (String, String, u8) {
-    let re : Regex = Regex::new("([a-z]+)(\\[?[0-9]+]?) (.+)").unwrap();
+    println!("{}", name);
+    let re : Regex = Regex::new("([a-z]+)(\\[?[0-9]+]?)[ \t]+(.+)").unwrap();
     let fields = re.captures(name.as_str()).unwrap();
     let typename=fields.get(1).unwrap().as_str().to_string();
     let mut typesize =fields.get(2).unwrap().as_str().to_string();
@@ -93,28 +94,41 @@ fn construct_fields(section_map : IndexMap<String, Option<String>>) -> Vec<Field
     return fields;
 }
 
-fn parse_message_section_name(name : String) -> (MsgType, u8, String) {
-    let re : Regex = Regex::new("(.*) (.*) (.*)").unwrap();
+fn parse_message_section_name(name : String) -> (MsgType, Option<u8>, bool, String) {
+    let re : Regex = Regex::new("(.*) (.*) (.*) (.*)").unwrap();
 
     let fields = re.captures(name.as_str()).unwrap();
     let stype=fields.get(1).unwrap().as_str();
-    let fport : u8 =fields.get(2).unwrap().as_str().parse().unwrap();
-    let name=fields.get(3).unwrap().as_str().to_string();
-
-    assert!(fport>0 && fport<224);
+    let sfport =fields.get(2).unwrap().as_str();
+    let sflength =fields.get(3).unwrap().as_str();
+    let name=fields.get(4).unwrap().as_str().to_string();
     assert!(name.len()>0);
 
+    let mut fport : Option<u8>=None;
+    if !sfport.contains("no_port") {
+        fport=Some(sfport.parse().unwrap());
+        assert!(fport>Some(0) && fport<Some(224));
+    }
+
+    let length_checked= match sflength {
+        "not_length_checked" => {false},
+        "length_checked" => {true},
+        _ => {panic!("third parameter must be length_checked or not_length_checked")}
+    };
+
+    assert!(length_checked || fport.is_some());
+    
     let msg_type = match stype {
         "uplink" => MsgType::Uplink,
         "downlink" => MsgType::Downlink,
         x => panic!("got '{}' but expected 'uplink' or 'downlink'", x)
     };
 
-    (msg_type, fport, name)
+    (msg_type, fport, length_checked, name)
 }
 
 fn construct_message(section_name : String, section_map : IndexMap<String, Option<String>>) -> Message {
-    let (msg_type, fport, name) = parse_message_section_name(section_name);
+    let (msg_type, fport, length_checked, name) = parse_message_section_name(section_name);
     let mut fields = construct_fields(section_map);
     let mut length = 0;
     for f in fields.as_mut_slice() {
@@ -124,12 +138,16 @@ fn construct_message(section_name : String, section_map : IndexMap<String, Optio
     }
     length=(length+7)/8;
 
+    let message_length=match length_checked {
+        true => {Some(length)}
+        false => {None}
+    };
     Message{
         name,
         fields,
         msg_type,
         fport,
-        length: length as u8
+        length: message_length
     }
 }
 
