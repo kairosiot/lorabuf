@@ -1,6 +1,6 @@
 ;please keep field sizes at or below 4 bytes (u32 or u[4])
 
-[downlink 10 DownlinkMessageName]
+[downlink 10 length_checked DownlinkMessageName]
 u1 one_bit_field
 u2 two_bit_field
 u8 eight_bit_field_with_value_override = 0xFF
@@ -11,32 +11,32 @@ u[1] one_byte_field_with_value_override = 0xAB
 u[2] two_byte_field_with_value_override = 0xABCD
 u[4] four_byte_field_with_value_override = 0xAB_CD_11_22 ; underscores can be used as separators
 
-[downlink 11 DownlinkHardcodedPayload]
+[downlink 11 length_checked DownlinkHardcodedPayload]
 u[1] command = 0x04
 u[1] data = 0xAA
 
-[downlink 12 DownlinkPartialHardcodedPayload]
+[downlink 12 length_checked DownlinkPartialHardcodedPayload]
 u[1] command = 0x04
 u[1] data
 
-[downlink 13 YetAnotherDownlink]
+[downlink 13 length_checked YetAnotherDownlink]
 u12 twelveBit
 u13 value
 
 ;value overrides are silently ignored on uplinks in most templates
-[uplink 10 UplinkMessageName]
+[uplink 10 length_checked UplinkMessageName]
 u1 some
 u1 field
 u2 name
 u3 goes
 u1 here
 
-[uplink 11 SecondUplinkName]
+[uplink 11 not_length_checked SecondUplinkName]
 u15 test
 
-[uplink 12 ThirdUplinkName]
+[uplink 12 not_length_checked ThirdUplinkName]
 u16 test
 
-[uplink 13 FourthUplinkName]
+[uplink 13 length_checked FourthUplinkName]
 u17 test
 

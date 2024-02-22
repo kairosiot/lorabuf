@@ -38,7 +38,7 @@ function W(buffer, warnings, start, end, value) {
     }
 }
 
-function decodeUplink(input) {
+export function decodeUplink(input) {
     //console.log("decodeUplink", input);
 
     let o=null; //output field array
@@ -47,7 +47,7 @@ function decodeUplink(input) {
     let l=input.bytes.length;
     let p=input.fPort;
     if (false){} {% for msg in uplinks %}
-    else if (p=={{msg.fport}} && l=={{msg.length}}) {
+    else if ({%if msg.fport%}p=={{msg.fport}}{%endif%}{%if msg.fport%}{%if msg.length%} && {%endif%}{%endif%}{%if msg.length%}l=={{msg.length}}{%endif%}) {
         // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
         o={ {{ msg.name }}: { {% for field in msg.fields%} {{field.name}}: R(b, {{field.start_index}}, {{field.end_index}}),{% endfor %} } }
     }{% endfor %}
@@ -63,7 +63,8 @@ function decodeUplink(input) {
     return output;
 }
 
-function encodeDownlink(input) {
+
+export function encodeDownlink(input) {
     //console.log("encodeDownlink", input);
     let p=input.fPort;
     let f=input.fields;
@@ -75,7 +76,7 @@ function encodeDownlink(input) {
     if (false) {} {% for msg in downlinks %}
     else if (p=={{msg.fport}}) {
         // Message: {{ msg.name }}, {{ msg.msg_type }}, port {{msg.fport}}, length {{ msg.length }} bytes
-        l=[{% for field in msg.fields%}{% unless field.value_override %}"{{field.name}}", {% endunless %}{% endfor %}]
+        let l=[{% for field in msg.fields%}{% unless field.value_override %}"{{field.name}}", {% endunless %}{% endfor %}];
         V(l, f, e);
         if (e.length==0) {
             b=[]
@@ -96,7 +97,7 @@ function encodeDownlink(input) {
     return output;
 }
 
-function decodeDownlink(input) {
+export function decodeDownlink(input) {
     //console.log("decodeDownlink", input);
 
     let o=null; //output field array

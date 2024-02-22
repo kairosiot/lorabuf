@@ -96,7 +96,7 @@ fn construct_fields(section_map : IndexMap<String, Option<String>>) -> Vec<Field
 
 fn parse_message_section_name(name : String) -> (MsgType, Option<u8>, bool, String) {
     let re : Regex = Regex::new("(.*) (.*) (.*) (.*)").unwrap();
-
+    
     let fields = re.captures(name.as_str()).unwrap();
     let stype=fields.get(1).unwrap().as_str();
     let sfport =fields.get(2).unwrap().as_str();
@@ -117,7 +117,7 @@ fn parse_message_section_name(name : String) -> (MsgType, Option<u8>, bool, Stri
     };
 
     assert!(length_checked || fport.is_some());
-    
+
     let msg_type = match stype {
         "uplink" => MsgType::Uplink,
         "downlink" => MsgType::Downlink,

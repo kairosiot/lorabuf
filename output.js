@@ -39,12 +39,12 @@
 //        here (1 bits)
 //        
 //
-// Message: SecondUplinkName, Uplink, port 11, length 2 bytes
+// Message: SecondUplinkName, Uplink, port 11, length  bytes
 //    Fields:
 //        test (15 bits)
 //        
 //
-// Message: ThirdUplinkName, Uplink, port 12, length 2 bytes
+// Message: ThirdUplinkName, Uplink, port 12, length  bytes
 //    Fields:
 //        test (16 bits)
 //        
@@ -60,10 +60,10 @@ const V = (field_list, user_data, error_list) => {
     const keys = Object.keys(user_data);
     field_list
         .filter((f) => !keys.includes(f))
-        .forEach((x) => error_list.push(`required field ${x} was not supplied`));
+        .forEach((x) => error_list.push(`required field '${x}' was not supplied`));
     keys
         .filter((f) => !field_list.includes(f))
-        .forEach((x) => error_list.push(`extra field ${x} was supplied but not used`));
+        .forEach((x) => error_list.push(`extra field '${x}' was supplied but not used`));
 }
 
 //read bits
@@ -88,25 +88,25 @@ function W(buffer, warnings, start, end, value) {
     }
 }
 
-function decodeUplink(input) {
+export function decodeUplink(input) {
     //console.log("decodeUplink", input);
 
     let o=null; //output field array
     let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
-    let p=input.fport;
+    let p=input.fPort;
     if (false){} 
     else if (p==10 && l==1) {
         // Message: UplinkMessageName, Uplink, port 10, length 1 bytes
         o={ UplinkMessageName: {  some: R(b, 0, 1), field: R(b, 1, 2), name: R(b, 2, 4), goes: R(b, 4, 7), here: R(b, 7, 8), } }
     }
-    else if (p==11 && l==2) {
-        // Message: SecondUplinkName, Uplink, port 11, length 2 bytes
+    else if (p==11) {
+        // Message: SecondUplinkName, Uplink, port 11, length  bytes
         o={ SecondUplinkName: {  test: R(b, 0, 15), } }
     }
-    else if (p==12 && l==2) {
-        // Message: ThirdUplinkName, Uplink, port 12, length 2 bytes
+    else if (p==12) {
+        // Message: ThirdUplinkName, Uplink, port 12, length  bytes
         o={ ThirdUplinkName: {  test: R(b, 0, 16), } }
     }
     else if (p==13 && l==3) {
@@ -125,9 +125,10 @@ function decodeUplink(input) {
     return output;
 }
 
-function encodeDownlink(input) {
+
+export function encodeDownlink(input) {
     //console.log("encodeDownlink", input);
-    let p=input.fport;
+    let p=input.fPort;
     let f=input.fields;
 
     //no error checking, missing fields will cause crash
@@ -137,38 +138,38 @@ function encodeDownlink(input) {
     if (false) {} 
     else if (p==10) {
         // Message: DownlinkMessageName, Downlink, port 10, length 12 bytes
-        l=["one_bit_field", "two_bit_field", "one_byte_filed", "two_byte_field", "another_one_bit_field", ]
+        let l=["one_bit_field", "two_bit_field", "one_byte_filed", "two_byte_field", "another_one_bit_field", ];
         V(l, f, e);
         if (e.length==0) {
-        b=[]
-        W(b, w, 0, 1, f.one_bit_field); W(b, w, 1, 3, f.two_bit_field); W(b, w, 3, 11, 255); W(b, w, 11, 19, f.one_byte_filed); W(b, w, 19, 35, f.two_byte_field); W(b, w, 35, 36, f.another_one_bit_field); W(b, w, 36, 44, 171); W(b, w, 44, 60, 43981); W(b, w, 60, 92, 2882343202); 
+            b=[]
+            W(b, w, 0, 1, f.one_bit_field); W(b, w, 1, 3, f.two_bit_field); W(b, w, 3, 11, 255); W(b, w, 11, 19, f.one_byte_filed); W(b, w, 19, 35, f.two_byte_field); W(b, w, 35, 36, f.another_one_bit_field); W(b, w, 36, 44, 171); W(b, w, 44, 60, 43981); W(b, w, 60, 92, 2882343202); 
         }
     }
     else if (p==11) {
         // Message: DownlinkHardcodedPayload, Downlink, port 11, length 2 bytes
-        l=[]
+        let l=[];
         V(l, f, e);
         if (e.length==0) {
-        b=[]
-        W(b, w, 0, 8, 4); W(b, w, 8, 16, 170); 
+            b=[]
+            W(b, w, 0, 8, 4); W(b, w, 8, 16, 170); 
         }
     }
     else if (p==12) {
         // Message: DownlinkPartialHardcodedPayload, Downlink, port 12, length 2 bytes
-        l=["data", ]
+        let l=["data", ];
         V(l, f, e);
         if (e.length==0) {
-        b=[]
-        W(b, w, 0, 8, 4); W(b, w, 8, 16, f.data); 
+            b=[]
+            W(b, w, 0, 8, 4); W(b, w, 8, 16, f.data); 
         }
     }
     else if (p==13) {
         // Message: YetAnotherDownlink, Downlink, port 13, length 4 bytes
-        l=["twelveBit", "value", ]
+        let l=["twelveBit", "value", ];
         V(l, f, e);
         if (e.length==0) {
-        b=[]
-        W(b, w, 0, 12, f.twelveBit); W(b, w, 12, 25, f.value); 
+            b=[]
+            W(b, w, 0, 12, f.twelveBit); W(b, w, 12, 25, f.value); 
         }
     }
     else {
@@ -185,14 +186,14 @@ function encodeDownlink(input) {
     return output;
 }
 
-function decodeDownlink(input) {
+export function decodeDownlink(input) {
     //console.log("decodeDownlink", input);
 
     let o=null; //output field array
     let e=[]; //errors
     let b=input.bytes;
     let l=input.bytes.length;
-    let p=input.fport;
+    let p=input.fPort;
     if (false){} 
     else if (p==10 && l==12) {
         // Message: DownlinkMessageName, Downlink, port 10, length 12 bytes

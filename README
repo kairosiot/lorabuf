@@ -7,7 +7,7 @@ Then optionally run `cargo build`
 Then optionally run `cargo run messages.lora js.template output.js` to run the example
 
 The examples are
- - messages.lora/js.template/output.js
+ - messages.lora/LoRaWAN_Payload_Codec_API_Specification_TS013-1.0.0.template/output.js
  - messages.lora/c-header.template/output-c-header.js
  - large.lora/js.template/output-large-trimmed.js
 
